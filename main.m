@@ -41,25 +41,41 @@ end
 
 %disp(resultsMatrix);
 torqueRequired = resultsMatrix;
-reductionRequired = MOTOR_TORQUE ./ resultsMatrix;
+reductionRequired =  resultsMatrix ./ MOTOR_TORQUE;
 
+for cutter_length = 1:length(CUTTER_LENGTH)
 
-figure('Name', 'Cutter Radius for 4" section')  %initalize first figure
-hold on
-title(sprintf('Cutter Radius to Torque Required'));
-xlabel('Cutter Radius [in]');
-ylabel('Torque [N*m]');
-yyaxis left;
-plot(CUTTER_RADIUS,resultsMatrix(:,:,3));
+    curr_len = CUTTER_LENGTH(cutter_length);
 
-%{
-LEGEND = cell(length(BLADE_HEIGHT), 1);
-for num = 1:length(BLADE_HEIGHT)
-    LEGEND{num} = strcat(num2str(BLADE_HEIGHT), '"') ;
+    %Plot Torque needed
+    figure('Name', 'Cutter Radius + Height to Torque')  %initalize first figure
+    hold on
+    title(sprintf('Cutter Radius + Height to Torque for %.1f" of length', curr_len));
+    xlabel('Cutter Radius [in]');
+    xlim([.5 2.5]);
+    ylabel('Torque [N*m]');
+    plot(CUTTER_RADIUS,resultsMatrix(:,:,cutter_length));
+    LEGEND = cell(length(BLADE_HEIGHT), 1);
+    for num = 1:length(BLADE_HEIGHT)
+        LEGEND{num} = strcat(num2str(BLADE_HEIGHT(num)), '"') ;
+    end
+    leg = legend(LEGEND);
+    title(leg, 'Blade Height')
+    hold off
+    
+    %Plot gear reduction needed
+    figure('Name', 'Reduction required for given Torque')  %initalize second figure
+    hold on
+    title(sprintf('Reduction Required for %.1f" section', curr_len));
+    xlabel('Cutter Radius [in]');
+    xlim([.5 2.5]);
+    ylabel('Gear reduction from motor [x:1]');
+    plot(CUTTER_RADIUS, reductionRequired(:,:,cutter_length));
+    LEGEND = cell(length(BLADE_HEIGHT), 1);
+    for num = 1:length(BLADE_HEIGHT)
+        LEGEND{num} = strcat(num2str(BLADE_HEIGHT(num)), '"') ;
+    end
+    leg = legend(LEGEND);
+    title(leg, 'Blade Height')
+    hold off
 end
-legend(LEGEND);
-%}
-hold off
-
-
-
