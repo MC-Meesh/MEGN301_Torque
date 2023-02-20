@@ -22,6 +22,7 @@ NEWTON_METERS_TO_FOOT_POUNDS = 0.7376;
 MOTOR_POWER = 120 * 3.2;
 MOTOR_SPEED = 1725; 
 MOTOR_TORQUE = 9.5488 * MOTOR_POWER / MOTOR_SPEED;
+POSSIBLE_REDUCTION = 200;
 
 %Testing cutter radius and blade height vairables
 resultsMatrix = zeros(length(BLADE_HEIGHT), length(CUTTER_RADIUS), length(CUTTER_LENGTH));
@@ -71,11 +72,20 @@ for cutter_length = 1:length(CUTTER_LENGTH)
     xlim([.5 2.5]);
     ylabel('Gear reduction from motor [x:1]');
     plot(CUTTER_RADIUS, reductionRequired(:,:,cutter_length));
-    LEGEND = cell(length(BLADE_HEIGHT), 1);
+
+    plot(CUTTER_RADIUS, (CUTTER_RADIUS ./ CUTTER_RADIUS) * 200, 'r')
+    
+
+    LEGEND = cell(length(BLADE_HEIGHT)+1, 1);
     for num = 1:length(BLADE_HEIGHT)
         LEGEND{num} = strcat(num2str(BLADE_HEIGHT(num)), '"') ;
     end
+
+    LEGEND{end} = strcat(num2str(POSSIBLE_REDUCTION), ':1');
     leg = legend(LEGEND);
     title(leg, 'Blade Height')
+
     hold off
+
+
 end
