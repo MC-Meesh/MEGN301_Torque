@@ -6,10 +6,10 @@ clc; clear;  close all;
 format short 
 
 %Variables to test
-CUTTER_LENGTH = 2:1:8;                 %inches of cutting section 
-BLADE_WIDTH = (1/16):(1/16):(.5);      %width of cutting edge
-BLADE_HEIGHT = .25:.05:1;              %length of cutting edge
-CUTTER_RADIUS = .75:.25:2;             %base radius from which cutters are extended from
+CUTTER_LENGTH = 2:1:6;                   %inches of cutting section 
+BLADE_WIDTH = 1/8;                       %width of cutting edge, plate steel to be used
+BLADE_HEIGHT = .25:.05:1;                %length of cutting edge
+CUTTER_RADIUS = .75:(1/8):2;             %base radius from which cutters are extended from
 
 
 %Key metrics to verify
@@ -25,29 +25,23 @@ NEWTON_METERS_TO_FOOT_POUNDS = 0.7376;
 
 
 
-%Testing each vairable
+%Testing cutter radius and blade height vairables
 
-resultsMatrix = zeros(length(CUTTER_LENGTH), length(BLADE_WIDTH), length(BLADE_HEIGHT), length(CUTTER_RADIUS));
 
-for cutterLength = 2:1:8
-    for bladeWidth = (1/16):(1/16):(.5)
+resultsMatrix = zeros(length(BLADE_HEIGHT), length(CUTTER_RADIUS), length(CUTTER_LENGTH));
 
-        numBlades = (cutterLength / bladeWidth);
 
-        for bladeHeight = .25:.05:1
-            for cutterRadius = 1:.25:2
-                
-                bladeArea = bladeWidth * bladeHeight * INCH_TO_M^2; %m^2
-                force_on_blades = PLA_ULTIMATE_STRESS * bladeArea * numBlades/3;    %blades orientated such that only 1/3 of blades are in contact at given angle
-                torqueRequired = force_on_blades * ((cutterRadius*INCH_TO_M) + (bladeHeight*INCH_TO_M)/2);  %force applied at half of centroid of blade
-                
-                resultsMatrix(find(CUTTER_LENGTH == cutterLength), find(BLADE_WIDTH==bladeWidth), find(BLADE_HEIGHT==bladeHeight), find(CUTTER_RADIUS==cutterRadius)) = torqueRequired;
+for length_i = 2:1:6
+    numBlades = floor(length_i / BLADE_WIDTH);
 
-            end
-        end
+    resultsMatrix_i = zeros(length(BLADE_HEIGHT), length(CUTTER_RADIUS));
+    for radius_i = .75:(1/8):2
+        bladeArea = BLADE_WIDTH * BLADE_HEIGHT * INCH_TO_M^2; %m^2
+        force_on_blades = PLA_ULTIMATE_STRESS * bladeArea * numBlades/3;    %blades orientated such that only 1/3 of blades are in contact at given angle
+        torqueRequired = force_on_blades .* ((radius_i*INCH_TO_M) + (BLADE_HEIGHT.*INCH_TO_M)/2);  %force applied at half of centroid of blade
+        resultsMatrix_i(:,find(CUTTER_RADIUS==radius_i)) = torqueRequired;
     end
+    resultsMatrix(:,:, find(CUTTER_LENGTH == length_i)) = resultsMatrix_i;
 end
 
-default_calcs = resultsMatrix(find(CUTTER_LENGTH == 4), find(BLADE_WIDTH == (1/8)), :, :);
-disp(default_calcs);
-
+disp(resultsMatrix);
