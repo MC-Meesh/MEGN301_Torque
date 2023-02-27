@@ -6,7 +6,7 @@ clc; clear;  close all;
 format short 
 
 %Variables to test
-CUTTER_LENGTH = 1:.5:4;                   %inches of cutting section 
+CUTTER_LENGTH = 3;                   %inches of cutting section 
 BLADE_WIDTH = .25;                       %width of cutting edge, plate steel to be used
 BLADE_HEIGHT = .25;                %length of cutting edge
 CUTTER_RADIUS = .75:(1/8):2;             %base radius from which cutters are extended from
@@ -32,9 +32,10 @@ for length_i = CUTTER_LENGTH
     numBlades = floor(length_i / (2*BLADE_WIDTH));
 
     resultsMatrix_i = zeros(length(MATERIAL_THICKNESS), length(CUTTER_RADIUS));
+    
     for radius_i = CUTTER_RADIUS
         cuttingArea = (BLADE_WIDTH + 2 * BLADE_HEIGHT) * INCH_TO_M^2 .* MATERIAL_THICKNESS; %m^2
-        force_on_blades = PLA_SHEAR_STRENGTH * cuttingArea * ceil(numBlades/3);    %blades orientated such that only 1/3 of blades are in contact at given angle
+        force_on_blades = PLA_SHEAR_STRENGTH * cuttingArea * numBlades/3;    %blades orientated such that only 1/3 of blades are in contact at given angle
         torqueRequired = force_on_blades .* ((radius_i*INCH_TO_M) + (BLADE_HEIGHT.*INCH_TO_M)/2);  %force applied at half of centroid of blade
         resultsMatrix_i(:,find(CUTTER_RADIUS==radius_i)) = torqueRequired;
     end
