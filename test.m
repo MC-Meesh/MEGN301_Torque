@@ -6,10 +6,11 @@ clc; clear;  close all;
 format short 
 
 %Variables to test
-CUTTER_LENGTH = 2:1:6;                   %inches of cutting section 
-BLADE_WIDTH = 1/4;                       %width of cutting edge, plate steel to be used
-BLADE_HEIGHT = .25:.05:1;                %length of cutting edge
+CUTTER_LENGTH = 1:.5:4;                   %inches of cutting section 
+BLADE_WIDTH = .25;                       %width of cutting edge, plate steel to be used
+BLADE_HEIGHT = .25;                %length of cutting edge
 CUTTER_RADIUS = .75:(1/8):2;             %base radius from which cutters are extended from
+MATERIAL_THICKNESS = .0125:.025:.25;
 
 %Key metrics to verify
 %torqueRequired; %[N*m]
@@ -22,18 +23,18 @@ NEWTON_METERS_TO_FOOT_POUNDS = 0.7376;
 MOTOR_POWER = 120 * 3.2;
 MOTOR_SPEED = 1725; 
 MOTOR_TORQUE = 9.5488 * MOTOR_POWER / MOTOR_SPEED;
-POSSIBLE_REDUCTION = 200;
+POSSIBLE_REDUCTION = 80;
 
 %Testing cutter radius and blade height vairables
-resultsMatrix = zeros(length(BLADE_HEIGHT), length(CUTTER_RADIUS), length(CUTTER_LENGTH));
+resultsMatrix = zeros(length(MATERIAL_THICKNESS), length(CUTTER_RADIUS), length(CUTTER_LENGTH));
 
-for length_i = 2:1:6
+for length_i = CUTTER_LENGTH
     numBlades = floor(length_i / (2*BLADE_WIDTH));
 
-    resultsMatrix_i = zeros(length(BLADE_HEIGHT), length(CUTTER_RADIUS));
-    for radius_i = .75:(1/8):2
-        bladeArea = BLADE_WIDTH + 2 * BLADE_HEIGHT * INCH_TO_M^2; %m^2
-        force_on_blades = PLA_SHEAR_STRENGTH * bladeArea * numBlades/3;    %blades orientated such that only 1/3 of blades are in contact at given angle
+    resultsMatrix_i = zeros(length(MATERIAL_THICKNESS), length(CUTTER_RADIUS));
+    for radius_i = CUTTER_RADIUS
+        cuttingArea = (BLADE_WIDTH + 2 * BLADE_HEIGHT) * INCH_TO_M^2 .* MATERIAL_THICKNESS; %m^2
+        force_on_blades = PLA_SHEAR_STRENGTH * cuttingArea * ceil(numBlades/3);    %blades orientated such that only 1/3 of blades are in contact at given angle
         torqueRequired = force_on_blades .* ((radius_i*INCH_TO_M) + (BLADE_HEIGHT.*INCH_TO_M)/2);  %force applied at half of centroid of blade
         resultsMatrix_i(:,find(CUTTER_RADIUS==radius_i)) = torqueRequired;
     end
@@ -49,19 +50,19 @@ for cutter_length = 1:length(CUTTER_LENGTH)
     curr_len = CUTTER_LENGTH(cutter_length);
 
     %Plot Torque needed
-    figure('Name', 'Cutter Radius + Height to Torque')  %initalize first figure
+    figure('Name', 'Cutter Radius + Material Thickness to Torque')  %initalize first figure
     hold on
-    title(sprintf('Cutter Radius + Height to Torque for %.1f" of length', curr_len));
+    title(sprintf('Cutter Radius + Material Thickness to Torque for %.1f" of length', curr_len));
     xlabel('Cutter Radius [in]');
     xlim([.5 2.5]);
     ylabel('Torque [N*m]');
     plot(CUTTER_RADIUS,resultsMatrix(:,:,cutter_length));
-    LEGEND = cell(length(BLADE_HEIGHT), 1);
-    for num = 1:length(BLADE_HEIGHT)
-        LEGEND{num} = strcat(num2str(BLADE_HEIGHT(num)), '"') ;
+    LEGEND = cell(length(MATERIAL_THICKNESS), 1);
+    for num = 1:length(MATERIAL_THICKNESS)
+        LEGEND{num} = strcat(num2str(MATERIAL_THICKNESS(num)), '"') ;
     end
     leg = legend(LEGEND);
-    title(leg, 'Blade Height')
+    title(leg, 'Material Thickness')
     hold off
     
     %Plot gear reduction needed
@@ -73,17 +74,17 @@ for cutter_length = 1:length(CUTTER_LENGTH)
     ylabel('Gear reduction from motor [x:1]');
     plot(CUTTER_RADIUS, reductionRequired(:,:,cutter_length));
 
-    plot(CUTTER_RADIUS, (CUTTER_RADIUS ./ CUTTER_RADIUS) * 200, 'r')
+    plot(CUTTER_RADIUS, (CUTTER_RADIUS ./ CUTTER_RADIUS) * POSSIBLE_REDUCTION, 'r')
     
 
-    LEGEND = cell(length(BLADE_HEIGHT)+1, 1);
-    for num = 1:length(BLADE_HEIGHT)
-        LEGEND{num} = strcat(num2str(BLADE_HEIGHT(num)), '"') ;
+    LEGEND = cell(length(MATERIAL_THICKNESS)+1, 1);
+    for num = 1:length(MATERIAL_THICKNESS)
+        LEGEND{num} = strcat(num2str(MATERIAL_THICKNESS(num)), '"') ;
     end
 
     LEGEND{end} = strcat(num2str(POSSIBLE_REDUCTION), ':1');
     leg = legend(LEGEND);
-    title(leg, 'Blade Height')
+    title(leg, 'Material Thickness')
 
     hold off
 
